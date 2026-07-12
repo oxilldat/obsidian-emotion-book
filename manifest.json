@@ -3,7 +3,7 @@
   "name": "Emotion Book",
   "version": "1.0.0",
   "minAppVersion": "1.4.0",
-  "description": "Emotion diary plugin for Obsidian",
+  "description": "Emotion diary plugin for Obsidian.",
   "author": "oxilldat",
   "isDesktopOnly": false
 }
