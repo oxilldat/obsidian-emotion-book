@@ -1,0 +1,9 @@
+{
+  "id": "emotion-book",
+  "name": "Emotion Book",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Дневник эмоций с аналитикой в ежедневных заметках",
+  "author": "You",
+  "isDesktopOnly": false
+}
