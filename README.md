@@ -15,7 +15,7 @@ A form appears with an emotion selector and a text field. Fill it in, hit **Add 
 
 After each entry the plugin automatically calculates the average emotion for the day and writes it to the `emotion` property in your frontmatter. This makes it easy to query with Dataview across your entire vault.
 
-![alt text](../docs/ph-1.png)
+![alt text](image/ph-1.png)
 
 ## Features
 
