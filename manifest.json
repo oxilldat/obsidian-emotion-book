@@ -3,7 +3,7 @@
   "name": "Emotion Book",
   "version": "1.0.0",
   "minAppVersion": "1.4.0",
-  "description": "Track your emotional state directly inside daily notes.",
-  "author": "oxilldat",
+  "description": "Emotion diary with analytics in daily notes",
+  "author": "You",
   "isDesktopOnly": false
 }

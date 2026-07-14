@@ -1,32 +1,33 @@
 {
+  "language": "ru",
   "emotions": [
     {
-      "label": "Joy",
+      "label": "Радость",
       "color": "#4caf50",
       "value": 5
     },
     {
-      "label": "Calmness",
+      "label": "Спокойствие",
       "color": "#2196f3",
       "value": 4
     },
     {
-      "label": "Neutral",
+      "label": "Нейтрально",
       "color": "#9e9e9e",
       "value": 3
     },
     {
-      "label": "Anxiety",
+      "label": "Тревога",
       "color": "#ff9800",
       "value": 2
     },
     {
-      "label": "Sadness",
+      "label": "Грусть",
       "color": "#607d8b",
       "value": 1
     },
     {
-      "label": "Anger",
+      "label": "Злость",
       "color": "#f44336",
       "value": 0
     }
