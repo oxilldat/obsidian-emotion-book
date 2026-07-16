@@ -1,5 +1,8 @@
 # Emotion Book
 
+- English
+- [Русский](README.RU.md)
+
 **Emotion Book** is a plugin for [Obsidian](https://obsidian.md) that adds structure to your daily notes. Record your state throughout the day, track dynamics, and store entries directly in separate Markdown files.
 
 ![alt text](<image/Cap 2026-07-16 at 19.31.58.gif>)
