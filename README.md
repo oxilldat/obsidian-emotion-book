@@ -1,51 +1,52 @@
 # Emotion Book
 
-**Emotion Book** — это плагин для [Obsidian](https://obsidian.md), который добавляет структуру в ваши ежедневные заметки. Фиксируйте своё состояние в течение дня, отслеживайте динамику и храните записи прямо в отдельных Markdown-файлах.
+**Emotion Book** is a plugin for [Obsidian](https://obsidian.md) that adds structure to your daily notes. Record your state throughout the day, track dynamics, and store entries directly in separate Markdown files.
 
-## Основные возможности
+## Key Features
 
-* **Удобный ввод и таймлайн:** Добавляйте записи в пару кликов и просматривайте хронологическую ленту дня прямо в ежедневной заметке.
-* **Гибкая настройка эмоций:** Создавайте собственные эмоции, настраивайте для них цвета и собственные веса.
-* **Чистый Markdown:** Все новые записи сохраняются как отдельные `.md` файлы с понятным YAML Frontmatter (теги, дата, эмоция), что позволяет легко анализировать их через Dataview или другие плагины.
-* **Поддержка старого формата:** Совместимость с блоками `emotion-book`, содержащими JSON-данные внутри кода.
-* **Двуязычный интерфейс:** Полная поддержка русского и английского языков.
+* **Convenient Entry and Timeline:** Add entries in a couple of clicks and view a chronological feed of the day right inside your daily note.
+* **Flexible Emotion Customization:** Create your own emotions, adjust their colors, and assign custom weights.
+* **Clean Markdown:** All new entries are saved as individual `.md` files with clean YAML Frontmatter (tags, date, emotion), making them easy to analyze via Dataview or other plugins.
+* **Legacy Format Support:** Full compatibility with `emotion-book` blocks containing JSON data directly inside the code block.
+* **Bilingual Interface:** Full support for Russian and English languages.
 
-## Установка
+## Installation
 
-### Ручная установка
+### Manual Installation
 
-1. Скачайте файлы `main.js`, `styles.css` и `manifest.json` из последнего релиза
-2. Перейдите в папку вашего хранилища Obsidian по пути: `.obsidian/plugins/`
-3. Создайте папку emotion-book и скопируйте в неё скачанные файлы.  
+1. Download `main.js`, `styles.css`, and `manifest.json` from the latest release.
+2. Navigate to your Obsidian vault directory: `.obsidian/plugins/`
+3. Create an `emotion-book` folder and copy the downloaded files into it.
 
-### Не ручная установка
+### Automatic Installation
 
-1. Откройте магазин плагинов Obsidian
-2. Найдите плагин 
-3. Установите
+1. Open the Obsidian Community Plugins store.
+2. Search for the plugin.
+3. Click Install.
 
-## Как использовать
+## Usage
 
-Добавление блока на страницу
+Adding a block to a page
 
-Чтобы встроить дневник эмоций в ежедневную (или любую другую) заметку, добавьте следующий блок кода:
+To embed the emotion diary into a daily (or any other) note, add the following code block:
 
 ````
 ```emotion-book
 ```
 ````
 
-## Настройки
+## Settings
 
-В настройках плагина (Настройки → Emotion Book) вам доступны:
+In the plugin settings (Settings → Emotion Book), you can configure:
 
-1. Язык (Language): Переключение между русским и английским языками интерфейса.
-2. Папка данных: Путь к папке, в которой будут автоматически создаваться файлы записей
-3. Список эмоций: Управление названием, цветом и числовым эквивалентом каждой эмоции
-4. Сброс: Быстрый возврат к стандартному набору эмоций
+1. Language: Switch between Russian and English interface languages.
+2. Data Folder: Path to the folder where entry files will be automatically created.
+3. Emotion List: Manage the name, color, and numerical value of each emotion.
+4. Reset: Quick reset back to the default set of emotions.
 
-## Поддержка
+## Support
 
-Если вы хотите поддержать меня и мою деятельность, вы можете подписаться на мои соц-сети или отправить донат на Бусти
-- https://t.me/oxilldat
-- https://boosty.to/oxilldat
+If you would like to support me and my work, you can subscribe to my social media or donate via Boosty:
+
+* [https://t.me/oxilldat](https://t.me/oxilldat)
+* [https://boosty.to/oxilldat](https://boosty.to/oxilldat)
