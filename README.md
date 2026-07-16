@@ -2,6 +2,8 @@
 
 **Emotion Book** is a plugin for [Obsidian](https://obsidian.md) that adds structure to your daily notes. Record your state throughout the day, track dynamics, and store entries directly in separate Markdown files.
 
+![alt text](<image/Cap 2026-07-16 at 19.31.58.gif>)
+
 ## Key Features
 
 * **Convenient Entry and Timeline:** Add entries in a couple of clicks and view a chronological feed of the day right inside your daily note.
@@ -34,6 +36,8 @@ To embed the emotion diary into a daily (or any other) note, add the following c
 ```emotion-book
 ```
 ````
+
+![alt text](<image/Cap 2026-07-16 at 19.22.03.gif>)
 
 ## Settings
 
