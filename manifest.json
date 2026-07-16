@@ -1,7 +1,7 @@
 {
   "id": "emotion-book",
   "name": "Emotion Book",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "minAppVersion": "1.4.0",
   "description": "Emotion diary with analytics in daily notes",
   "author": "oxilldat",
