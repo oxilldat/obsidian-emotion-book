@@ -1,3 +1,5 @@
+/* Emotion Book — bundled, не редактировать вручную */
+"use strict";
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -22,17 +24,10 @@ __export(main_exports, {
   default: () => EmotionBookPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian = require("obsidian");
+var import_obsidian5 = require("obsidian");
 
-var EMOTIONS_EN = [
-  { label: "Joy", color: "#4caf50", value: 5 },
-  { label: "Calm", color: "#2196f3", value: 4 },
-  { label: "Neutral", color: "#9e9e9e", value: 3 },
-  { label: "Anxiety", color: "#ff9800", value: 2 },
-  { label: "Sadness", color: "#607d8b", value: 1 },
-  { label: "Anger", color: "#f44336", value: 0 }
-];
-var EMOTIONS_RU = [
+// types.ts
+var DEFAULT_EMOTIONS = [
   { label: "Радость", color: "#4caf50", value: 5 },
   { label: "Спокойствие", color: "#2196f3", value: 4 },
   { label: "Нейтрально", color: "#9e9e9e", value: 3 },
@@ -40,58 +35,16 @@ var EMOTIONS_RU = [
   { label: "Грусть", color: "#607d8b", value: 1 },
   { label: "Злость", color: "#f44336", value: 0 }
 ];
-var STRINGS = {
-  en: {
-    entriesToday: (n) => `Entries today: ${n}`,
-    edit: "Edit",
-    delete: "Delete",
-    save: "Save",
-    cancel: "Cancel",
-    writeBeforeSave: "Write something before saving",
-    addEntry: "Add entry",
-    describeMoment: "Describe this moment of the day…",
-    emotion: (i) => `Emotion ${i}`,
-    name: "Name",
-    addEmotion: "+ Add emotion",
-    reset: "Reset",
-    new: "New",
-    language: "Language",
-    languageDesc: "Interface language",
-    emotions: "Emotions",
-    emotionsDesc: "Configure emotion labels, values, and colors",
-    english: "English",
-    russian: "Russian"
-  },
-  ru: {
-    entriesToday: (n) => `Записей сегодня: ${n}`,
-    edit: "Редактировать",
-    delete: "Удалить",
-    save: "Сохранить",
-    cancel: "Отмена",
-    writeBeforeSave: "Напиши что-нибудь перед сохранением",
-    addEntry: "Добавить запись",
-    describeMoment: "Опиши этот момент дня…",
-    emotion: (i) => `Эмоция ${i}`,
-    name: "Название",
-    addEmotion: "+ Добавить эмоцию",
-    reset: "Сбросить",
-    new: "Новая",
-    language: "Язык",
-    languageDesc: "Язык интерфейса",
-    emotions: "Эмоции",
-    emotionsDesc: "Настройка названий, значений и цветов эмоций",
-    english: "English",
-    russian: "Русский"
-  }
+var DEFAULT_SETTINGS = {
+  emotions: DEFAULT_EMOTIONS,
+  language: "ru",
+  rootFolder: ""
 };
-function getDefaultEmotions(lang) {
-  return lang === "ru" ? EMOTIONS_RU.map((e) => ({ ...e })) : EMOTIONS_EN.map((e) => ({ ...e }));
-}
-function translate(lang, key, ...args) {
-  const str = STRINGS[lang][key];
-  return typeof str === "function" ? str(...args) : str;
-}
-var DEFAULT_SETTINGS = { language: "en", emotions: getDefaultEmotions("en") };
+
+// render.ts
+var import_obsidian2 = require("obsidian");
+
+// helpers.ts
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -106,314 +59,513 @@ function colorDot(color, size = 10) {
   dot.style.height = `${size}px`;
   return dot;
 }
-var EmotionBookPlugin = class extends import_obsidian.Plugin {
-  constructor() {
-    super(...arguments);
-    this.detailsOpen = /* @__PURE__ */ new Map();
+function timeFromIso(isoDateTime) {
+  const m = isoDateTime.match(/T(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : "";
+}
+function findEmotionByValue(emotions, value) {
+  if (emotions.length === 0)
+    return void 0;
+  return emotions.reduce(
+    (best, em) => Math.abs(em.value - value) < Math.abs(best.value - value) ? em : best
+  );
+}
+
+// emotionPicker.ts
+function createEmotionPicker(container, emotions, initialLabel) {
+  var _a, _b;
+  const row = container.createDiv({ cls: "eb-row eb-emotion-picker" });
+  const indicator = row.createDiv({ cls: "eb-indicator" });
+  const select = row.createEl("select", { cls: "eb-select" });
+  for (const em of emotions) {
+    select.createEl("option", { value: em.label, text: em.label });
   }
-  t(key, ...args) {
-    return translate(this.settings.language, key, ...args);
+  let current = (_a = emotions.find((e) => e.label === initialLabel)) != null ? _a : emotions[0];
+  if (current)
+    select.value = current.label;
+  indicator.style.background = (_b = current == null ? void 0 : current.color) != null ? _b : "#9e9e9e";
+  select.onchange = () => {
+    var _a2, _b2;
+    current = (_a2 = emotions.find((e) => e.label === select.value)) != null ? _a2 : emotions[0];
+    indicator.style.background = (_b2 = current == null ? void 0 : current.color) != null ? _b2 : "#9e9e9e";
+  };
+  return {
+    el: row,
+    getSelected: () => current != null ? current : emotions[0]
+  };
+}
+
+// locales.ts
+var ru = {
+  entriesToday: (count) => `Записей сегодня: ${count}`,
+  addEntry: "Добавить запись",
+  textPlaceholder: "Опиши этот момент дня…",
+  save: "Сохранить",
+  cancel: "Отмена",
+  editTitle: "Редактировать",
+  deleteTitle: "Удалить",
+  emptyTextNotice: "Текст не может быть пустым",
+  writeSomethingNotice: "Напиши что-нибудь перед сохранением",
+  entryDeletedNotice: "Запись удалена",
+  entryUpdatedNotice: "Запись обновлена",
+  entrySavedNotice: "Запись сохранена",
+  fileNotFoundNotice: "Файл не найден",
+  noteUnresolvedNotice: "Не удалось определить текущую заметку",
+  settingsHeading: "Emotion Book",
+  generalSectionHeading: "Общие",
+  emotionsSectionHeading: "Эмоции",
+  languageSettingName: "Язык",
+  languageSettingDesc: "Язык интерфейса плагина",
+  dataFolderSettingName: "Папака",
+  dataFolderSettingDesc: "Внутри неё автоматически создаётся подпапка с сегодняшней датой, а в ней — файл записи. Оставь пустым, чтобы папка с датой создавалась прямо в корне хранилища.",
+  emotionNamePlaceholder: "Название",
+  emotionDefaultName: (index) => `Эмоция ${index}`,
+  addEmotionButton: "+ Добавить эмоцию",
+  resetSettingName: "Сбросить к стандартным",
+  resetButton: "Сбросить"
+};
+var en = {
+  entriesToday: (count) => `Entries today: ${count}`,
+  addEntry: "Add entry",
+  textPlaceholder: "Describe this moment of your day…",
+  save: "Save",
+  cancel: "Cancel",
+  editTitle: "Edit",
+  deleteTitle: "Delete",
+  emptyTextNotice: "Text cannot be empty",
+  writeSomethingNotice: "Write something before saving",
+  entryDeletedNotice: "Entry deleted",
+  entryUpdatedNotice: "Entry updated",
+  entrySavedNotice: "Entry saved",
+  fileNotFoundNotice: "File not found",
+  noteUnresolvedNotice: "Could not resolve the current note",
+  settingsHeading: "Emotion Book",
+  generalSectionHeading: "General",
+  emotionsSectionHeading: "Emotions",
+  languageSettingName: "Language",
+  languageSettingDesc: "Plugin interface language",
+  dataFolderSettingName: "Folder",
+  dataFolderSettingDesc: "A subfolder named with today’s date is created inside it automatically, and the entry file goes there. Leave empty to create the date folder right in the vault root.",
+  emotionNamePlaceholder: "Name",
+  emotionDefaultName: (index) => `Emotion ${index}`,
+  addEmotionButton: "+ Add emotion",
+  resetSettingName: "Reset to defaults",
+  resetButton: "Reset"
+};
+var dictionaries = { ru, en };
+function getStrings(lang) {
+  var _a;
+  return (_a = dictionaries[lang]) != null ? _a : ru;
+}
+
+// entryStore.ts
+var import_obsidian = require("obsidian");
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+function todayKey() {
+  const d = new Date();
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+function resolveDayKey(noteBasename) {
+  let m = noteBasename.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m)
+    return `${m[3]}.${m[2]}.${m[1]}`;
+  m = noteBasename.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+  if (m)
+    return `${m[1]}.${m[2]}.${m[3]}`;
+  m = noteBasename.match(/^(\d{2})-(\d{2})-(\d{4})/);
+  if (m)
+    return `${m[1]}.${m[2]}.${m[3]}`;
+  return todayKey();
+}
+function dayFolderPath(rootFolder, dayKey) {
+  const path = rootFolder.trim() ? `${rootFolder.trim()}/${dayKey}` : dayKey;
+  return (0, import_obsidian.normalizePath)(path);
+}
+async function ensureFolder(app, folder) {
+  if (!folder || app.vault.getAbstractFileByPath(folder))
+    return;
+  try {
+    await app.vault.createFolder(folder);
+  } catch (e) {
   }
-  async onload() {
-    await this.loadSettings();
-    this.addSettingTab(new EmotionBookSettingTab(this.app, this));
-    this.registerMarkdownCodeBlockProcessor(
-      "emotion-book",
-      (source, el, ctx) => this.renderBlock(source, el, ctx)
-    );
-    this.addStyle();
+}
+function nowIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+function yamlDescription(text) {
+  if (text.includes("\n")) {
+    const indented = text.split("\n").map((l) => "  " + l).join("\n");
+    return `description: |-
+${indented}`;
   }
-  async loadSettings() {
-    const saved = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, saved);
-    if (!this.settings.language) {
-      this.settings.language = "en";
-    }
-    if (!Array.isArray(this.settings.emotions) || this.settings.emotions.length === 0) {
-      this.settings.emotions = getDefaultEmotions(this.settings.language);
-    }
-  }
-  async saveSettings() {
-    await this.saveData(this.settings);
-  }
-  async renderBlock(source, el, ctx) {
-    let data = { entries: [] };
-    try {
-      if (source.trim())
-        data = JSON.parse(source);
-    } catch (e) {
-    }
-    el.empty();
-    const wrap = el.createDiv({ cls: "eb-wrap" });
-    if (data.entries.length > 0) {
-      const details = wrap.createEl("details", { cls: "eb-details" });
-      if (this.detailsOpen.get(ctx.sourcePath))
-        details.open = true;
-      details.addEventListener("toggle", () => {
-        this.detailsOpen.set(ctx.sourcePath, details.open);
-      });
-      details.createEl("summary", { cls: "eb-summary", text: this.t("entriesToday", data.entries.length) });
-      const list = details.createDiv({ cls: "eb-entries" });
-      data.entries.forEach((e, i) => {
-        this.renderEntry(list, e, i, data, ctx);
-      });
-    }
-    this.renderForm(wrap, data, ctx);
-  }
-  renderEntry(container, e, index, data, ctx) {
-    const row = container.createDiv({ cls: "eb-entry" });
-    row.style.background = hexToRgba(e.color, 0.08);
-    row.style.borderLeft = `3px solid ${e.color}`;
-    const head = row.createDiv({ cls: "eb-entry-head" });
-    head.appendChild(colorDot(e.color));
-    head.createSpan({ cls: "eb-time", text: e.time });
-    head.createSpan({ cls: "eb-emotion", text: e.emotion });
-    const editBtn = head.createEl("button", { cls: "eb-icon-btn", text: "\u270F\uFE0F" });
-    editBtn.title = this.t("edit");
-    const delBtn = head.createEl("button", { cls: "eb-icon-btn eb-del-btn", text: "\u{1F5D1}\uFE0F" });
-    delBtn.title = this.t("delete");
-    const textEl = row.createEl("p", { cls: "eb-text", text: e.text });
-    delBtn.onclick = async () => {
-      data.entries.splice(index, 1);
-      await this.saveBlock(ctx.sourcePath, data);
-    };
-    editBtn.onclick = () => {
-      textEl.hide();
-      editBtn.hide();
-      delBtn.hide();
-      const editWrap = row.createDiv({ cls: "eb-edit-wrap" });
-      const editRow = editWrap.createDiv({ cls: "eb-row" });
-      const sel = editRow.createEl("select", { cls: "eb-select" });
-      for (const em of this.settings.emotions) {
-        const opt = sel.createEl("option", { value: em.label, text: em.label });
-        if (em.label === e.emotion)
-          opt.selected = true;
-      }
-      const ta = editWrap.createEl("textarea", { cls: "eb-textarea" });
-      ta.value = e.text;
-      const btnRow = editWrap.createDiv({ cls: "eb-row" });
-      const saveBtn = btnRow.createEl("button", { cls: "eb-btn", text: this.t("save") });
-      const cancelBtn = btnRow.createEl("button", { cls: "eb-btn eb-cancel", text: this.t("cancel") });
-      cancelBtn.onclick = () => {
-        editWrap.remove();
-        textEl.show();
-        editBtn.show();
-        delBtn.show();
-      };
-      saveBtn.onclick = async () => {
-        var _a;
-        const newText = ta.value.trim();
-        if (!newText) {
-          new import_obsidian.Notice(this.t("writeBeforeSave"));
-          return;
+  const needsQuotes = /^[\s"'\[{>|#&*!%@`-]/.test(text) || text.includes(": ") || text.includes(" #");
+  return needsQuotes ? `description: ${JSON.stringify(text)}` : `description: ${text}`;
+}
+function buildEntryContent(isoDateTime, text, value) {
+  return [
+    "---",
+    `emotion: ${value}`,
+    `date: ${isoDateTime}`,
+    yamlDescription(text),
+    "---",
+    ""
+  ].join("\n");
+}
+function parseEntryFile(content) {
+  const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!fmMatch)
+    return null;
+  const fm = fmMatch[1];
+  const emotionMatch = fm.match(/^emotion:\s*(.+)$/m);
+  const dateMatch = fm.match(/^date:\s*(.+)$/m);
+  if (!emotionMatch)
+    return null;
+  const value = parseFloat(emotionMatch[1].trim());
+  const isoDateTime = dateMatch ? dateMatch[1].trim().replace(/^"|"$/g, "") : "";
+  let text = "";
+  const blockMatch = fm.match(/^description:\s*\|-\r?\n([\s\S]*)$/m);
+  if (blockMatch) {
+    text = blockMatch[1].split("\n").map((l) => l.replace(/^  /, "")).join("\n").replace(/\s+$/, "");
+  } else {
+    const inlineMatch = fm.match(/^description:\s*(.*)$/m);
+    if (inlineMatch) {
+      const raw = inlineMatch[1].trim();
+      if (raw.startsWith('"')) {
+        try {
+          text = JSON.parse(raw);
+        } catch (e) {
+          text = raw;
         }
-        const emObj = (_a = this.settings.emotions.find((em) => em.label === sel.value)) != null ? _a : this.settings.emotions[0];
-        data.entries[index] = {
-          ...data.entries[index],
+      } else {
+        text = raw;
+      }
+    }
+  }
+  return { value: isNaN(value) ? 0 : value, isoDateTime, text };
+}
+async function listEntriesForDay(app, rootFolder, dayKey) {
+  const folder = dayFolderPath(rootFolder, dayKey);
+  const files = app.vault.getMarkdownFiles().filter(
+    (f) => f.path === folder || f.path.startsWith(folder + "/")
+  );
+  const result = [];
+  for (const f of files) {
+    const parsed = parseEntryFile(await app.vault.read(f));
+    if (!parsed)
+      continue;
+    result.push({ file: f, isoDateTime: parsed.isoDateTime, text: parsed.text, value: parsed.value });
+  }
+  result.sort((a, b) => a.isoDateTime.localeCompare(b.isoDateTime));
+  return result;
+}
+async function createEntryFile(app, rootFolder, text, value) {
+  const dayKey = todayKey();
+  const folder = dayFolderPath(rootFolder, dayKey);
+  await ensureFolder(app, folder);
+  const existing = app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(folder + "/")).map((f) => f.basename.match(new RegExp(`^${dayKey.replace(/\./g, "\\.")}-(\\d+)-emotionbook$`))).filter((m) => !!m).map((m) => parseInt(m[1], 10));
+  const nextIndex = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+  const path = (0, import_obsidian.normalizePath)(`${folder}/${dayKey}-${nextIndex}-emotionbook.md`);
+  const content = buildEntryContent(nowIso(), text, value);
+  return app.vault.create(path, content);
+}
+async function updateEntryFile(app, file, isoDateTime, text, value) {
+  const content = buildEntryContent(isoDateTime, text, value);
+  await app.vault.modify(file, content);
+}
+async function deleteEntryFile(app, file) {
+  await app.vault.trash(file, true);
+}
+
+// render.ts
+async function renderBlock(host, source, el, ctx) {
+  let legacyData = { entries: [] };
+  try {
+    if (source.trim())
+      legacyData = JSON.parse(source);
+  } catch (e) {
+  }
+  el.empty();
+  const wrap = el.createDiv({ cls: "eb-wrap" });
+  const sourceFile = host.app.vault.getAbstractFileByPath(ctx.sourcePath);
+  const noteFile = sourceFile instanceof import_obsidian2.TFile ? sourceFile : null;
+  const dayKey = noteFile ? resolveDayKey(noteFile.basename) : null;
+  let currentDisplay = [];
+  let detailsOpen = false;
+  const redraw = async () => {
+    const t = getStrings(host.settings.language);
+    const existingDetails = wrap.querySelector("details.eb-details");
+    if (existingDetails)
+      detailsOpen = existingDetails.open;
+    wrap.empty();
+    const fileEntries = dayKey ? await listEntriesForDay(host.app, host.settings.rootFolder, dayKey) : [];
+    currentDisplay = [
+      ...legacyData.entries.map((e, index) => ({
+        kind: "legacy",
+        index,
+        time: e.time,
+        label: e.emotion,
+        value: e.emotionValue,
+        color: e.color,
+        text: e.text
+      })),
+      ...fileEntries.map((fe) => {
+        var _a, _b;
+        const em = findEmotionByValue(host.settings.emotions, fe.value);
+        return {
+          kind: "file",
+          file: fe.file,
+          isoDateTime: fe.isoDateTime,
+          time: timeFromIso(fe.isoDateTime),
+          label: (_a = em == null ? void 0 : em.label) != null ? _a : "—",
+          value: fe.value,
+          color: (_b = em == null ? void 0 : em.color) != null ? _b : "#9e9e9e",
+          text: fe.text
+        };
+      })
+    ].sort((a, b) => a.time.localeCompare(b.time));
+    const header = wrap.createDiv({ cls: "eb-header" });
+    if (currentDisplay.length > 0) {
+      const details = header.createEl("details", { cls: "eb-details" });
+      details.open = detailsOpen;
+      const summary = details.createEl("summary", { cls: "eb-summary" });
+      summary.createSpan({ cls: "eb-summary-label", text: t.entriesToday(currentDisplay.length) });
+      const trail = summary.createDiv({ cls: "eb-trail" });
+      currentDisplay.forEach((e) => trail.appendChild(colorDot(e.color, 7)));
+      const timeline = details.createDiv({ cls: "eb-timeline" });
+      currentDisplay.forEach((entry) => renderEntry(host, t, timeline, entry, legacyData, ctx, el, afterMutation));
+    }
+    renderForm(host, t, wrap, afterMutation);
+  };
+  const afterMutation = async () => {
+    await redraw();
+  };
+  await redraw();
+}
+function renderEntry(host, t, container, entry, legacyData, ctx, rootEl, afterMutation) {
+  const item = container.createDiv({ cls: "eb-timeline-item" });
+  const timelineDot = item.createDiv({ cls: "eb-timeline-dot" });
+  timelineDot.style.background = entry.color;
+  const card = item.createDiv({ cls: "eb-entry" });
+  card.style.background = hexToRgba(entry.color, 0.08);
+  card.style.borderLeftColor = entry.color;
+  const head = card.createDiv({ cls: "eb-entry-head" });
+  head.createSpan({ cls: "eb-time", text: entry.time });
+  head.createSpan({ cls: "eb-emotion", text: entry.label });
+  const editBtn = head.createEl("button", { cls: "eb-icon-btn", text: "✏️" });
+  editBtn.title = t.editTitle;
+  const delBtn = head.createEl("button", { cls: "eb-icon-btn eb-del-btn", text: "🗑️" });
+  delBtn.title = t.deleteTitle;
+  card.createEl("p", { cls: "eb-text", text: entry.text });
+  delBtn.onclick = async () => {
+    if (entry.kind === "legacy") {
+      legacyData.entries.splice(entry.index, 1);
+      await host.saveBlock(ctx, rootEl, legacyData, host.settings.language);
+    } else {
+      await deleteEntryFile(host.app, entry.file);
+    }
+    await afterMutation();
+    new import_obsidian2.Notice(t.entryDeletedNotice);
+  };
+  editBtn.onclick = () => {
+    var _a, _b;
+    const editWrap = card.createDiv({ cls: "eb-edit-wrap" });
+    (_a = card.querySelector(".eb-entry-head")) == null ? void 0 : _a.setAttr("style", "display:none");
+    (_b = card.querySelector(".eb-text")) == null ? void 0 : _b.setAttr("style", "display:none");
+    const picker = createEmotionPicker(editWrap, host.settings.emotions, entry.label);
+    const ta = editWrap.createEl("textarea", { cls: "eb-textarea" });
+    ta.value = entry.text;
+    const btnRow = editWrap.createDiv({ cls: "eb-row" });
+    const saveBtn = btnRow.createEl("button", { cls: "eb-btn", text: t.save });
+    const cancelBtn = btnRow.createEl("button", { cls: "eb-btn eb-cancel", text: t.cancel });
+    cancelBtn.onclick = () => {
+      var _a2, _b2;
+      editWrap.remove();
+      (_a2 = card.querySelector(".eb-entry-head")) == null ? void 0 : _a2.removeAttribute("style");
+      (_b2 = card.querySelector(".eb-text")) == null ? void 0 : _b2.removeAttribute("style");
+    };
+    saveBtn.onclick = async () => {
+      const newText = ta.value.trim();
+      if (!newText) {
+        new import_obsidian2.Notice(t.emptyTextNotice);
+        return;
+      }
+      const emObj = picker.getSelected();
+      if (entry.kind === "legacy") {
+        legacyData.entries[entry.index] = {
+          ...legacyData.entries[entry.index],
           emotion: emObj.label,
           emotionValue: emObj.value,
           color: emObj.color,
           text: newText
         };
-        await this.saveBlock(ctx.sourcePath, data);
-      };
-    };
-  }
-  renderForm(wrap, data, ctx) {
-    const form = wrap.createDiv({ cls: "eb-form" });
-    const row = form.createDiv({ cls: "eb-row" });
-    const indicator = row.createDiv({ cls: "eb-indicator" });
-    const select = row.createEl("select", { cls: "eb-select" });
-    for (const em of this.settings.emotions) {
-      select.createEl("option", { value: em.label, text: em.label });
-    }
-    const btn = row.createEl("button", { cls: "eb-btn", text: this.t("addEntry") });
-    const textarea = form.createEl("textarea", {
-      cls: "eb-textarea",
-      placeholder: this.t("describeMoment")
-    });
-    const updateIndicator = () => {
-      var _a;
-      const found = this.settings.emotions.find((e) => e.label === select.value);
-      indicator.style.background = (_a = found == null ? void 0 : found.color) != null ? _a : "#9e9e9e";
-    };
-    updateIndicator();
-    select.onchange = updateIndicator;
-    btn.onclick = async () => {
-      var _a;
-      const text = textarea.value.trim();
-      if (!text) {
-        new import_obsidian.Notice(this.t("writeBeforeSave"));
-        return;
+        await host.saveBlock(ctx, rootEl, legacyData, host.settings.language);
+      } else {
+        await updateEntryFile(host.app, entry.file, entry.isoDateTime, newText, emObj.value);
       }
-      const emObj = (_a = this.settings.emotions.find((e) => e.label === select.value)) != null ? _a : this.settings.emotions[0];
-      const now = new Date();
-      const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-      data.entries.push({
-        time,
-        emotion: emObj.label,
-        emotionValue: emObj.value,
-        color: emObj.color,
-        text
-      });
-      await this.saveBlock(ctx.sourcePath, data);
-      textarea.value = "";
+      await afterMutation();
+      new import_obsidian2.Notice(t.entryUpdatedNotice);
     };
-  }
-  async saveBlock(sourcePath, data) {
-    const file = this.app.vault.getAbstractFileByPath(sourcePath);
-    if (!file) {
+  };
+}
+function renderForm(host, t, wrap, afterMutation) {
+  var _a;
+  const form = wrap.createDiv({ cls: "eb-form" });
+  const picker = createEmotionPicker(form, host.settings.emotions, (_a = host.settings.emotions[0]) == null ? void 0 : _a.label);
+  const addBtn = picker.el.createEl("button", { cls: "eb-btn eb-add-btn", text: t.addEntry });
+  const textarea = form.createEl("textarea", { cls: "eb-textarea", placeholder: t.textPlaceholder });
+  addBtn.onclick = async () => {
+    const text = textarea.value.trim();
+    if (!text) {
+      new import_obsidian2.Notice(t.writeSomethingNotice);
       return;
     }
-    let content = await this.app.vault.read(file);
-    const blockRe = /```emotion-book\n[\s\S]*?```/;
-    const newBlock = `\`\`\`emotion-book
+    const emObj = picker.getSelected();
+    await createEntryFile(host.app, host.settings.rootFolder, text, emObj.value);
+    await afterMutation();
+    textarea.value = "";
+    new import_obsidian2.Notice(t.entrySavedNotice);
+  };
+}
+
+// save.ts
+var import_obsidian3 = require("obsidian");
+var BlockSaver = class {
+  constructor(app) {
+    this.app = app;
+    this.savingPaths = /* @__PURE__ */ new Set();
+  }
+  async save(ctx, rootEl, data, lang) {
+    const sourcePath = ctx.sourcePath;
+    if (this.savingPaths.has(sourcePath))
+      return;
+    this.savingPaths.add(sourcePath);
+    try {
+      const file = this.app.vault.getAbstractFileByPath(sourcePath);
+      if (!file) {
+        new import_obsidian3.Notice(getStrings(lang).fileNotFoundNotice);
+        return;
+      }
+      const info = ctx.getSectionInfo(rootEl);
+      let content = await this.app.vault.read(file);
+      const newBlock = `\`\`\`emotion-book
 ${JSON.stringify(data, null, 2)}
 \`\`\``;
-    content = content.match(blockRe) ? content.replace(blockRe, newBlock) : content + "\n" + newBlock;
-    const avg = data.entries.length ? data.entries.reduce((s, e) => s + e.emotionValue, 0) / data.entries.length : 3;
-    const emotionScore = Math.round(avg * 10) / 10;
-    content = this.setFrontmatterKey(content, "emotion", emotionScore);
-    await this.app.vault.modify(file, content);
-  }
-  setFrontmatterKey(content, key, value) {
-    const fmRe = /^---\r?\n([\s\S]*?)\r?\n---/;
-    const match = content.match(fmRe);
-    const formatted = typeof value === "number" ? String(value) : `"${value}"`;
-    if (!match)
-      return `---
-${key}: ${formatted}
----
-
-` + content;
-    const fm = match[1];
-    const keyRe = new RegExp(`^${key}:.*$`, "m");
-    const newLine = `${key}: ${formatted}`;
-    const newFm = keyRe.test(fm) ? fm.replace(keyRe, newLine) : fm + "\n" + newLine;
-    return content.replace(fmRe, `---
-${newFm}
----`);
-  }
-  addStyle() {
-    const css = `
-.eb-wrap { font-family: var(--font-interface); }
-
-.eb-details { margin-bottom: 12px; }
-.eb-summary { cursor: pointer; font-size: .8em; opacity: .5; user-select: none; padding: 2px 0; }
-.eb-summary:hover { opacity: .8; }
-
-.eb-entries   { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-.eb-entry     { padding: 10px 12px; border-radius: 8px; }
-.eb-entry-head { display: flex; align-items: center; gap: 6px; }
-.eb-time      { font-size: .72em; opacity: .5; }
-.eb-emotion   { font-weight: 600; font-size: .82em; flex: 1; }
-.eb-text      { margin: 6px 0 0; font-size: .88em; line-height: 1.5; }
-
-.eb-dot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
-
-.eb-icon-btn  { background: none; border: none; cursor: pointer; font-size: .85em; opacity: .4; padding: 0 2px; }
-.eb-icon-btn:hover { opacity: 1; }
-.eb-del-btn:hover  { color: #f44336; }
-
-.eb-edit-wrap { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-
-.eb-form { display: flex; flex-direction: column; gap: 8px; }
-.eb-row  { display: flex; gap: 8px; align-items: center; }
-
-.eb-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-.eb-select   { flex: 1; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); font-size: .9em; }
-.eb-textarea { resize: vertical; min-height: 72px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--background-modifier-border); background: var(--background-primary); color: var(--text-normal); font-size: .9em; }
-.eb-btn      { white-space: nowrap; padding: 6px 14px; border-radius: 6px; background: var(--color-accent); color: #fff; border: none; cursor: pointer; font-size: .88em; }
-.eb-btn:hover { opacity: .85; }
-.eb-cancel   { background: var(--background-modifier-border); color: var(--text-normal); }
-
-.eb-settings-header { margin-bottom: 16px; }
-.eb-settings-header h2 { margin: 0 0 2px; padding-top: 0; }
-.eb-settings-desc { margin: 0; font-size: .85em; opacity: .6; }
-.eb-settings-btnrow { display: flex; gap: 8px; margin-top: 16px; }
-`;
-    const style = document.createElement("style");
-    style.id = "emotion-book-styles";
-    style.textContent = css;
-    document.head.appendChild(style);
-  }
-  onunload() {
-    var _a;
-    (_a = document.getElementById("emotion-book-styles")) == null ? void 0 : _a.remove();
+      if (info) {
+        const lines = content.split("\n");
+        lines.splice(info.lineStart, info.lineEnd - info.lineStart + 1, newBlock);
+        content = lines.join("\n");
+      } else {
+        const blockRe = /```emotion-book\n[\s\S]*?```/;
+        content = blockRe.test(content) ? content.replace(blockRe, newBlock) : content + "\n" + newBlock;
+      }
+      await this.app.vault.modify(file, content);
+    } finally {
+      this.savingPaths.delete(sourcePath);
+    }
   }
 };
-var EmotionBookSettingTab = class extends import_obsidian.PluginSettingTab {
-  constructor(app, plugin) {
-    super(app, plugin);
-    this.plugin = plugin;
+
+// settings.ts
+var import_obsidian4 = require("obsidian");
+var EmotionBookSettingTab = class extends import_obsidian4.PluginSettingTab {
+  constructor(app, host) {
+    super(app, host);
+    this.host = host;
   }
   display() {
     const { containerEl } = this;
+    const t = getStrings(this.host.settings.language);
     containerEl.empty();
-    const header = containerEl.createDiv({ cls: "eb-settings-header" });
-    header.createEl("h2", { text: this.plugin.t("emotions") });
-    header.createEl("p", { cls: "eb-settings-desc", text: this.plugin.t("emotionsDesc") });
-    new import_obsidian.Setting(containerEl).setName(this.plugin.t("language")).setDesc(this.plugin.t("languageDesc")).addDropdown((dropdown) => {
-      dropdown.addOption("en", this.plugin.t("english"));
-      dropdown.addOption("ru", this.plugin.t("russian"));
-      dropdown.setValue(this.plugin.settings.language);
-      dropdown.onChange(async (value) => {
-        this.plugin.settings.language = value;
-        await this.plugin.saveSettings();
+    new import_obsidian4.Setting(containerEl).setName(t.generalSectionHeading).setHeading();
+    new import_obsidian4.Setting(containerEl).setName(t.languageSettingName).setDesc(t.languageSettingDesc).addDropdown(
+      (dd) => dd.addOption("ru", "Русский").addOption("en", "English").setValue(this.host.settings.language).onChange(async (v) => {
+        this.host.settings.language = v;
+        await this.host.saveSettings();
         this.display();
-      });
-    });
-    for (let i = 0; i < this.plugin.settings.emotions.length; i++) {
-      const em = this.plugin.settings.emotions[i];
-      const s = new import_obsidian.Setting(containerEl).setName(em.label || this.plugin.t("emotion", i + 1));
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName(t.dataFolderSettingName).setDesc(t.dataFolderSettingDesc).addText(
+      (text) => text.setPlaceholder("папка1/папка2").setValue(this.host.settings.rootFolder).onChange(async (v) => {
+        this.host.settings.rootFolder = v.trim();
+        await this.host.saveSettings();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName(t.emotionsSectionHeading).setHeading();
+    const emotions = this.host.settings.emotions;
+    for (let i = 0; i < emotions.length; i++) {
+      const em = emotions[i];
+      const s = new import_obsidian4.Setting(containerEl).setName(em.label || t.emotionDefaultName(i + 1));
       s.addText(
-        (t) => t.setPlaceholder(this.plugin.t("name")).setValue(em.label).onChange(async (v) => {
-          this.plugin.settings.emotions[i].label = v;
-          await this.plugin.saveSettings();
-          s.setName(v || this.plugin.t("emotion", i + 1));
+        (text) => text.setPlaceholder(t.emotionNamePlaceholder).setValue(em.label).onChange(async (v) => {
+          emotions[i].label = v;
+          await this.host.saveSettings();
+          s.setName(v || t.emotionDefaultName(i + 1));
         })
       );
-      s.addText((t) => {
-        t.inputEl.type = "number";
-        t.inputEl.style.width = "60px";
-        t.setValue(String(em.value)).setPlaceholder("0\u201310");
-        t.onChange(async (v) => {
+      s.addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.style.width = "60px";
+        text.setValue(String(em.value)).setPlaceholder("0–10");
+        text.onChange(async (v) => {
           const n = parseFloat(v);
           if (!isNaN(n)) {
-            this.plugin.settings.emotions[i].value = n;
-            await this.plugin.saveSettings();
+            emotions[i].value = n;
+            await this.host.saveSettings();
           }
         });
       });
       s.addColorPicker(
         (cp) => cp.setValue(em.color).onChange(async (v) => {
-          this.plugin.settings.emotions[i].color = v;
-          await this.plugin.saveSettings();
+          emotions[i].color = v;
+          await this.host.saveSettings();
         })
       );
       s.addButton(
         (b) => b.setIcon("trash").setWarning().onClick(async () => {
-          this.plugin.settings.emotions.splice(i, 1);
-          await this.plugin.saveSettings();
+          emotions.splice(i, 1);
+          await this.host.saveSettings();
           this.display();
         })
       );
     }
-    const btnRow = containerEl.createDiv({ cls: "eb-settings-btnrow" });
-    const addBtn = btnRow.createEl("button", { text: this.plugin.t("addEmotion"), cls: "mod-cta" });
-    addBtn.onclick = async () => {
-      this.plugin.settings.emotions.push({ label: this.plugin.t("new"), color: "#888888", value: 3 });
-      await this.plugin.saveSettings();
-      this.display();
-    };
-    const resetBtn = btnRow.createEl("button", { text: this.plugin.t("reset"), cls: "mod-warning" });
-    resetBtn.onclick = async () => {
-      this.plugin.settings.emotions = getDefaultEmotions(this.plugin.settings.language);
-      await this.plugin.saveSettings();
-      this.display();
-    };
+    new import_obsidian4.Setting(containerEl).addButton(
+      (b) => b.setButtonText(t.addEmotionButton).onClick(async () => {
+        emotions.push({ label: "Новая", color: "#888888", value: 3 });
+        await this.host.saveSettings();
+        this.display();
+      })
+    );
+    new import_obsidian4.Setting(containerEl).setName(t.resetSettingName).addButton(
+      (b) => b.setButtonText(t.resetButton).setWarning().onClick(async () => {
+        this.host.settings.emotions = [...DEFAULT_EMOTIONS];
+        await this.host.saveSettings();
+        this.display();
+      })
+    );
   }
 };
 
-/* nosourcemap */
+// main.ts
+var EmotionBookPlugin = class extends import_obsidian5.Plugin {
+  async onload() {
+    await this.loadSettings();
+    this.saver = new BlockSaver(this.app);
+    this.addSettingTab(new EmotionBookSettingTab(this.app, this));
+    this.registerMarkdownCodeBlockProcessor(
+      "emotion-book",
+      (source, el, ctx) => renderBlock(this, source, el, ctx)
+    );
+  }
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+  saveBlock(ctx, rootEl, data, lang) {
+    return this.saver.save(ctx, rootEl, data, lang);
+  }
+};

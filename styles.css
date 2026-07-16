@@ -1,0 +1,115 @@
+.eb-wrap { font-family: var(--font-interface); }
+
+/* Верхняя панель: сводка слева, кнопка добавления справа сверху */
+.eb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.eb-add-btn { align-self: center; flex-shrink: 0; }
+
+/* Свёрнутый блок / мод-трейл */
+.eb-details { flex: 1; min-width: 0; }
+.eb-summary {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  list-style: none;
+}
+.eb-summary::-webkit-details-marker { display: none; }
+.eb-summary-label { font-size: .78em; opacity: .5; }
+.eb-summary:hover .eb-summary-label { opacity: .8; }
+.eb-trail { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+
+/* Таймлайн */
+.eb-timeline {
+  position: relative;
+  margin-top: 10px;
+  padding-left: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.eb-timeline::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 4px;
+  bottom: 4px;
+  width: 1px;
+  background: var(--background-modifier-border);
+}
+.eb-timeline-item { position: relative; }
+.eb-timeline-dot {
+  position: absolute;
+  left: -15px;
+  top: 13px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--background-primary);
+}
+
+/* Записи */
+.eb-entry      { padding: 10px 12px; border-left: 3px solid; border-radius: 0 8px 8px 0; }
+.eb-entry-head { display: flex; align-items: center; gap: 6px; }
+.eb-time       { font-size: .72em; opacity: .5; }
+.eb-emotion    { font-weight: 600; font-size: .82em; flex: 1; }
+.eb-text       { margin: 6px 0 0; font-size: .88em; line-height: 1.5; }
+
+/* Кружок-точка (мод-трейл, таймлайн) */
+.eb-dot { display: inline-block; border-radius: 50%; flex-shrink: 0; }
+
+/* Кнопки иконки */
+.eb-icon-btn { background: none; border: none; cursor: pointer; font-size: .85em; opacity: .4; padding: 0 2px; }
+.eb-icon-btn:hover { opacity: 1; }
+.eb-del-btn:hover  { color: #f44336; }
+
+/* Форма редактирования */
+.eb-edit-wrap { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Форма добавления */
+.eb-form { display: flex; flex-direction: column; gap: 10px; }
+.eb-row  { display: flex; gap: 8px; align-items: center; }
+
+/* Выбор эмоции: индикатор цвета + выпадающий список */
+.eb-emotion-picker { align-items: center; }
+.eb-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.eb-select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: .9em;
+}
+
+.eb-textarea {
+  resize: vertical;
+  min-height: 72px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: .9em;
+}
+.eb-btn {
+  align-self: flex-start;
+  white-space: nowrap;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: .88em;
+}
+.eb-btn:hover { opacity: .85; }
+.eb-cancel { background: var(--background-modifier-border); color: var(--text-normal); }

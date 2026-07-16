@@ -1,5 +1,4 @@
 {
-  "language": "ru",
   "emotions": [
     {
       "label": "Радость",
@@ -31,5 +30,7 @@
       "color": "#f44336",
       "value": 0
     }
-  ]
+  ],
+  "language": "ru",
+  "rootFolder": ""
 }
