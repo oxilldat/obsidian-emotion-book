@@ -470,6 +470,36 @@ ${JSON.stringify(data, null, 2)}
 
 // settings.ts
 var import_obsidian4 = require("obsidian");
+var FolderSuggest = class extends import_obsidian4.AbstractInputSuggest {
+  constructor(app, inputEl) {
+    super(app, inputEl);
+    this.inputEl = inputEl;
+  }
+  getSuggestions(query) {
+    const lowerQuery = query.toLowerCase();
+    const folders = [];
+    const collect = (folder) => {
+      if (folder.path !== "/" && folder.path.toLowerCase().includes(lowerQuery)) {
+        folders.push(folder.path);
+      }
+      for (const child of folder.children) {
+        if (child instanceof import_obsidian4.TFolder)
+          collect(child);
+      }
+    };
+    collect(this.app.vault.getRoot());
+    folders.sort((a, b) => a.localeCompare(b));
+    return folders.slice(0, 200);
+  }
+  renderSuggestion(path, el) {
+    el.setText(path === "" ? "/" : path);
+  }
+  selectSuggestion(path) {
+    this.inputEl.value = path;
+    this.inputEl.trigger("input");
+    this.close();
+  }
+};
 var EmotionBookSettingTab = class extends import_obsidian4.PluginSettingTab {
   constructor(app, host) {
     super(app, host);
@@ -488,10 +518,13 @@ var EmotionBookSettingTab = class extends import_obsidian4.PluginSettingTab {
       })
     );
     new import_obsidian4.Setting(containerEl).setName(t.dataFolderSettingName).setDesc(t.dataFolderSettingDesc).addText(
-      (text) => text.setPlaceholder("папка1/папка2").setValue(this.host.settings.rootFolder).onChange(async (v) => {
-        this.host.settings.rootFolder = v.trim();
-        await this.host.saveSettings();
-      })
+      (text) => {
+        text.setPlaceholder("папка1/папка2").setValue(this.host.settings.rootFolder).onChange(async (v) => {
+          this.host.settings.rootFolder = v.trim();
+          await this.host.saveSettings();
+        });
+        new FolderSuggest(this.app, text.inputEl);
+      }
     );
     new import_obsidian4.Setting(containerEl).setName(t.emotionsSectionHeading).setHeading();
     const emotions = this.host.settings.emotions;
