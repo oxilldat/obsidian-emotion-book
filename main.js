@@ -38,7 +38,8 @@ var DEFAULT_EMOTIONS = [
 var DEFAULT_SETTINGS = {
   emotions: DEFAULT_EMOTIONS,
   language: "ru",
-  rootFolder: ""
+  rootFolder: "",
+  dateField: "created"
 };
 
 // render.ts
@@ -99,6 +100,7 @@ function createEmotionPicker(container, emotions, initialLabel) {
 var ru = {
   entriesToday: (count) => `Записей сегодня: ${count}`,
   addEntry: "Добавить запись",
+  newEntryTitle: "Новая запись",
   textPlaceholder: "Опиши этот момент дня…",
   save: "Сохранить",
   cancel: "Отмена",
@@ -116,8 +118,10 @@ var ru = {
   emotionsSectionHeading: "Эмоции",
   languageSettingName: "Язык",
   languageSettingDesc: "Язык интерфейса плагина",
-  dataFolderSettingName: "Папака",
+  dataFolderSettingName: "Папка",
   dataFolderSettingDesc: "Внутри неё автоматически создаётся подпапка с сегодняшней датой, а в ней — файл записи. Оставь пустым, чтобы папка с датой создавалась прямо в корне хранилища.",
+  dateFieldSettingName: "Поле даты во frontmatter",
+  dateFieldSettingDesc: "Имя frontmatter-поля заметки, из которого берётся её дата (приоритетнее имени файла). Если поля нет — дата берётся из имени файла, затем из даты создания файла, затем сегодня.",
   emotionNamePlaceholder: "Название",
   emotionDefaultName: (index) => `Эмоция ${index}`,
   addEmotionButton: "+ Добавить эмоцию",
@@ -127,6 +131,7 @@ var ru = {
 var en = {
   entriesToday: (count) => `Entries today: ${count}`,
   addEntry: "Add entry",
+  newEntryTitle: "New entry",
   textPlaceholder: "Describe this moment of your day…",
   save: "Save",
   cancel: "Cancel",
@@ -146,6 +151,8 @@ var en = {
   languageSettingDesc: "Plugin interface language",
   dataFolderSettingName: "Folder",
   dataFolderSettingDesc: "A subfolder named with today’s date is created inside it automatically, and the entry file goes there. Leave empty to create the date folder right in the vault root.",
+  dateFieldSettingName: "Frontmatter date field",
+  dateFieldSettingDesc: "Name of the note's frontmatter field used as its date (takes priority over the filename). If absent — the date is taken from the filename, then from the file creation date, then today.",
   emotionNamePlaceholder: "Name",
   emotionDefaultName: (index) => `Emotion ${index}`,
   addEmotionButton: "+ Add emotion",
@@ -167,7 +174,10 @@ function todayKey() {
   const d = new Date();
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 }
-function resolveDayKey(noteBasename) {
+function dayKeyFromDate(d) {
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+function dayKeyFromBasename(noteBasename) {
   let m = noteBasename.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m)
     return `${m[3]}.${m[2]}.${m[1]}`;
@@ -177,7 +187,47 @@ function resolveDayKey(noteBasename) {
   m = noteBasename.match(/^(\d{2})-(\d{2})-(\d{4})/);
   if (m)
     return `${m[1]}.${m[2]}.${m[3]}`;
+  return null;
+}
+function parseDateToDayKey(value) {
+  if (value == null)
+    return null;
+  if (value instanceof Date)
+    return isNaN(value.getTime()) ? null : dayKeyFromDate(value);
+  const s = String(value).trim();
+  if (!s)
+    return null;
+  const fromName = dayKeyFromBasename(s);
+  if (fromName)
+    return fromName;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : dayKeyFromDate(d);
+}
+function resolveNoteDayKey(app, noteFile, settings) {
+  var _a, _b;
+  const field = ((settings == null ? void 0 : settings.dateField) || "").trim();
+  if (field) {
+    const fm = (_a = app.metadataCache.getFileCache(noteFile)) == null ? void 0 : _a.frontmatter;
+    if (fm && fm[field] != null) {
+      const key = parseDateToDayKey(fm[field]);
+      if (key)
+        return key;
+    }
+  }
+  const fromName = dayKeyFromBasename(noteFile.basename);
+  if (fromName)
+    return fromName;
+  const ctime = (_b = noteFile.stat) == null ? void 0 : _b.ctime;
+  if (ctime)
+    return dayKeyFromDate(new Date(ctime));
   return todayKey();
+}
+function isoForDayKey(dayKey) {
+  const d = new Date();
+  const m = dayKey.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (m)
+    return `${m[3]}-${m[2]}-${m[1]}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  return nowIso();
 }
 function dayFolderPath(rootFolder, dayKey) {
   const path = rootFolder.trim() ? `${rootFolder.trim()}/${dayKey}` : dayKey;
@@ -261,14 +311,14 @@ async function listEntriesForDay(app, rootFolder, dayKey) {
   result.sort((a, b) => a.isoDateTime.localeCompare(b.isoDateTime));
   return result;
 }
-async function createEntryFile(app, rootFolder, text, value) {
-  const dayKey = todayKey();
-  const folder = dayFolderPath(rootFolder, dayKey);
+async function createEntryFile(app, rootFolder, text, value, dayKey) {
+  const key = dayKey || todayKey();
+  const folder = dayFolderPath(rootFolder, key);
   await ensureFolder(app, folder);
-  const existing = app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(folder + "/")).map((f) => f.basename.match(new RegExp(`^${dayKey.replace(/\./g, "\\.")}-(\\d+)-emotionbook$`))).filter((m) => !!m).map((m) => parseInt(m[1], 10));
+  const existing = app.vault.getMarkdownFiles().filter((f) => f.path.startsWith(folder + "/")).map((f) => f.basename.match(new RegExp(`^${key.replace(/\./g, "\\.")}-(\\d+)-emotionbook$`))).filter((m) => !!m).map((m) => parseInt(m[1], 10));
   const nextIndex = existing.length > 0 ? Math.max(...existing) + 1 : 1;
-  const path = (0, import_obsidian.normalizePath)(`${folder}/${dayKey}-${nextIndex}-emotionbook.md`);
-  const content = buildEntryContent(nowIso(), text, value);
+  const path = (0, import_obsidian.normalizePath)(`${folder}/${key}-${nextIndex}-emotionbook.md`);
+  const content = buildEntryContent(isoForDayKey(key), text, value);
   return app.vault.create(path, content);
 }
 async function updateEntryFile(app, file, isoDateTime, text, value) {
@@ -280,6 +330,36 @@ async function deleteEntryFile(app, file) {
 }
 
 // render.ts
+var EntryModal = class extends import_obsidian2.Modal {
+  constructor(app, t, onSubmit) {
+    super(app);
+    this.t = t;
+    this.onSubmit = onSubmit;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.addClass("eb-modal");
+    this.titleEl.setText(this.t.newEntryTitle);
+    const ta = contentEl.createEl("textarea", { cls: "eb-textarea", placeholder: this.t.textPlaceholder });
+    const btnRow = contentEl.createDiv({ cls: "eb-row eb-modal-actions" });
+    const saveBtn = btnRow.createEl("button", { cls: "eb-btn", text: this.t.save });
+    const cancelBtn = btnRow.createEl("button", { cls: "eb-btn eb-cancel", text: this.t.cancel });
+    cancelBtn.onclick = () => this.close();
+    saveBtn.onclick = async () => {
+      const text = ta.value.trim();
+      if (!text) {
+        new import_obsidian2.Notice(this.t.writeSomethingNotice);
+        return;
+      }
+      this.close();
+      await this.onSubmit(text);
+    };
+    window.setTimeout(() => ta.focus(), 0);
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+};
 async function renderBlock(host, source, el, ctx) {
   let legacyData = { entries: [] };
   try {
@@ -291,11 +371,11 @@ async function renderBlock(host, source, el, ctx) {
   const wrap = el.createDiv({ cls: "eb-wrap" });
   const sourceFile = host.app.vault.getAbstractFileByPath(ctx.sourcePath);
   const noteFile = sourceFile instanceof import_obsidian2.TFile ? sourceFile : null;
-  const dayKey = noteFile ? resolveDayKey(noteFile.basename) : null;
   let currentDisplay = [];
   let detailsOpen = false;
   const redraw = async () => {
     const t = getStrings(host.settings.language);
+    const dayKey = noteFile ? resolveNoteDayKey(host.app, noteFile, host.settings) : null;
     const existingDetails = wrap.querySelector("details.eb-details");
     if (existingDetails)
       detailsOpen = existingDetails.open;
@@ -326,8 +406,9 @@ async function renderBlock(host, source, el, ctx) {
         };
       })
     ].sort((a, b) => a.time.localeCompare(b.time));
-    const header = wrap.createDiv({ cls: "eb-header" });
+    renderForm(host, t, wrap, afterMutation, dayKey);
     if (currentDisplay.length > 0) {
+      const header = wrap.createDiv({ cls: "eb-header" });
       const details = header.createEl("details", { cls: "eb-details" });
       details.open = detailsOpen;
       const summary = details.createEl("summary", { cls: "eb-summary" });
@@ -337,7 +418,6 @@ async function renderBlock(host, source, el, ctx) {
       const timeline = details.createDiv({ cls: "eb-timeline" });
       currentDisplay.forEach((entry) => renderEntry(host, t, timeline, entry, legacyData, ctx, el, afterMutation));
     }
-    renderForm(host, t, wrap, afterMutation);
   };
   const afterMutation = async () => {
     await redraw();
@@ -410,23 +490,18 @@ function renderEntry(host, t, container, entry, legacyData, ctx, rootEl, afterMu
     };
   };
 }
-function renderForm(host, t, wrap, afterMutation) {
+function renderForm(host, t, wrap, afterMutation, dayKey) {
   var _a;
   const form = wrap.createDiv({ cls: "eb-form" });
   const picker = createEmotionPicker(form, host.settings.emotions, (_a = host.settings.emotions[0]) == null ? void 0 : _a.label);
   const addBtn = picker.el.createEl("button", { cls: "eb-btn eb-add-btn", text: t.addEntry });
-  const textarea = form.createEl("textarea", { cls: "eb-textarea", placeholder: t.textPlaceholder });
-  addBtn.onclick = async () => {
-    const text = textarea.value.trim();
-    if (!text) {
-      new import_obsidian2.Notice(t.writeSomethingNotice);
-      return;
-    }
+  addBtn.onclick = () => {
     const emObj = picker.getSelected();
-    await createEntryFile(host.app, host.settings.rootFolder, text, emObj.value);
-    await afterMutation();
-    textarea.value = "";
-    new import_obsidian2.Notice(t.entrySavedNotice);
+    new EntryModal(host.app, t, async (text) => {
+      await createEntryFile(host.app, host.settings.rootFolder, text, emObj.value, dayKey);
+      await afterMutation();
+      new import_obsidian2.Notice(t.entrySavedNotice);
+    }).open();
   };
 }
 
@@ -526,6 +601,12 @@ var EmotionBookSettingTab = class extends import_obsidian4.PluginSettingTab {
         new FolderSuggest(this.app, text.inputEl);
       }
     );
+    new import_obsidian4.Setting(containerEl).setName(t.dateFieldSettingName).setDesc(t.dateFieldSettingDesc).addText(
+      (text) => text.setPlaceholder("created").setValue(this.host.settings.dateField).onChange(async (v) => {
+        this.host.settings.dateField = v.trim();
+        await this.host.saveSettings();
+      })
+    );
     new import_obsidian4.Setting(containerEl).setName(t.emotionsSectionHeading).setHeading();
     const emotions = this.host.settings.emotions;
     for (let i = 0; i < emotions.length; i++) {
@@ -540,14 +621,22 @@ var EmotionBookSettingTab = class extends import_obsidian4.PluginSettingTab {
       );
       s.addText((text) => {
         text.inputEl.type = "number";
+        text.inputEl.min = "0";
+        text.inputEl.max = "10";
         text.inputEl.style.width = "60px";
         text.setValue(String(em.value)).setPlaceholder("0–10");
         text.onChange(async (v) => {
-          const n = parseFloat(v);
-          if (!isNaN(n)) {
-            emotions[i].value = n;
-            await this.host.saveSettings();
-          }
+          let n = parseFloat(v);
+          if (isNaN(n))
+            return;
+          if (n < 0)
+            n = 0;
+          if (n > 10)
+            n = 10;
+          emotions[i].value = n;
+          if (String(n) !== v)
+            text.setValue(String(n));
+          await this.host.saveSettings();
         });
       });
       s.addColorPicker(

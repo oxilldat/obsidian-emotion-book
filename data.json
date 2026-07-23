@@ -32,5 +32,6 @@
     }
   ],
   "language": "ru",
-  "rootFolder": ""
+  "rootFolder": "",
+  "dateField": "created"
 }

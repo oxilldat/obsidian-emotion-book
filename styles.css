@@ -1,14 +1,20 @@
 .eb-wrap { font-family: var(--font-interface); }
 
-/* Верхняя панель: сводка слева, кнопка добавления справа сверху */
+/* Панель «Записей сегодня» — под формой добавления */
 .eb-header {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-top: 16px;
 }
-.eb-add-btn { align-self: center; flex-shrink: 0; }
+
+/* Кнопка «Добавить запись» — компактная, акцентная, рядом со списком эмоций */
+.eb-add-btn {
+  flex-shrink: 0;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+.eb-add-btn:hover { background: var(--interactive-accent-hover); opacity: 1; }
 
 /* Свёрнутый блок / мод-трейл */
 .eb-details { flex: 1; min-width: 0; }
@@ -113,3 +119,7 @@
 }
 .eb-btn:hover { opacity: .85; }
 .eb-cancel { background: var(--background-modifier-border); color: var(--text-normal); }
+
+/* Модальное окно добавления записи (только поле текста) */
+.eb-modal .eb-textarea { width: 100%; box-sizing: border-box; }
+.eb-modal-actions { margin-top: 12px; justify-content: flex-end; }
